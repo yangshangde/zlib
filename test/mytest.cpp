@@ -47,17 +47,16 @@ int testCompress()
 	string first;
 	srcFile >> first;
 
+	z_stream d_stream;
+	//d_stream.zalloc = malloc;
+	//d_stream.zfree = free;
+	d_stream.opaque = (voidpf)0;
+	err = deflateInit(&d_stream, Z_BEST_COMPRESSION);
+	CHECK_ERR(err, "deflateInit");
+
 	while (srcFile >> line)
 	{
-		z_stream d_stream;
-		//d_stream.zalloc = malloc;
-		//d_stream.zfree = free;
-		d_stream.opaque = (voidpf)0;
-
-		int err = deflateInit(&d_stream, Z_BEST_COMPRESSION);
-		CHECK_ERR(err, "deflateInit");
-
-		//err = deflateSetDictionary(&d_stream, (const Bytef*)(dictionary.c_str()), dictionary.size());
+		err = deflateSetDictionary(&d_stream, (const Bytef*)(dictionary.c_str()), dictionary.size());
 		//err = deflateSetDictionary(&d_stream, (const Bytef*)(first.c_str()), first.size());
 		CHECK_ERR(err, "deflateSetDictionary");
 
@@ -75,11 +74,13 @@ int testCompress()
 
 		destLen = d_stream.total_out;		
 
-		err = deflateEnd(&d_stream);
-		CHECK_ERR(err, "deflateEnd");
 
 		cout << "src len=" << line.size() << ", dest len=" << destLen << ", compress ratio=" << (int)((float) destLen / (float)line.size() * 100) << "%" << endl;
+		deflateResetKeep(&d_stream) ;
 	}
+
+	err = deflateEnd(&d_stream);
+	CHECK_ERR(err, "deflateEnd");
 
 	return 0;
 }
